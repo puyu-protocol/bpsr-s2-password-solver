@@ -110,7 +110,7 @@
   <h1>4位數密碼破解助手</h1>
   <p class="subtitle">密碼只由 1 和 2 組成<br>遊戲回饋：正確位置且正確數字的個數（0–4）</p>
 
-  <div id="guess-display">按「下一個建議」開始</div>
+  <div id="guess-display">按「送出」開始猜測</div>
 
   <div class="controls">
     <label>輸入遊戲告訴你的正確數（0–4）：</label>
@@ -120,7 +120,7 @@
     <button id="reset-btn">重新開始</button>
   </div>
 
-  <div id="status" class="info">準備開始！</div>
+  <div id="status" class="info">準備開始！（16 種可能）</div>
 
   <div id="history">
     <strong>猜測歷史：</strong><br>
@@ -129,7 +129,7 @@
 </div>
 
 <script>
-// 所有可能的組合（2^4 = 16 種）
+// 所有可能的組合
 let possibilities = [
   "1111","1112","1121","1122",
   "1211","1212","1221","1222",
@@ -146,14 +146,15 @@ const input = document.getElementById("correct-input");
 const submitBtn = document.getElementById("submit-btn");
 const resetBtn = document.getElementById("reset-btn");
 
+function getRemainingText() {
+  return `（${possibilities.length} 種可能剩下）`;
+}
+
 function pickGuess() {
   if (possibilities.length === 0) {
-    statusDiv.textContent = "錯誤：已無可能組合，請檢查輸入是否正確";
-    statusDiv.className = "error";
-    submitBtn.disabled = true;
     return "????";
   }
-  // 簡單策略：永遠拿第一個剩下的
+  // 簡單策略：拿第一個
   return possibilities[0];
 }
 
@@ -169,8 +170,11 @@ function updateGuess() {
   currentGuess = pickGuess();
   guessDisplay.textContent = currentGuess;
   guessCount++;
-  statusDiv.textContent = `建議輸入：${currentGuess}  (${possibilities.length} 種可能剩下)`;
+  
+  // 無論是否解決，都顯示剩餘數量
+  statusDiv.textContent = `建議輸入：${currentGuess}  ${getRemainingText()}`;
   statusDiv.className = "info";
+  
   input.value = "";
   input.focus();
 }
@@ -194,7 +198,8 @@ function filterPossibilities(correct) {
 }
 
 function showSolved() {
-  statusDiv.textContent = `破解成功！密碼就是 ${currentGuess} （共用了 ${guessCount} 次建議）`;
+  guessDisplay.textContent = currentGuess;
+  statusDiv.textContent = `破解成功！密碼就是 ${currentGuess}  ${getRemainingText()} （共用了 ${guessCount} 次建議）`;
   statusDiv.className = "success";
   submitBtn.disabled = true;
   guessDisplay.style.color = "#34d399";
@@ -206,7 +211,7 @@ updateGuess();
 submitBtn.addEventListener("click", () => {
   const val = parseInt(input.value);
   if (isNaN(val) || val < 0 || val > 4) {
-    statusDiv.textContent = "請輸入 0 到 4 的數字";
+    statusDiv.textContent = "請輸入 0 到 4 的數字 " + getRemainingText();
     statusDiv.className = "error";
     return;
   }
@@ -223,6 +228,10 @@ submitBtn.addEventListener("click", () => {
   if (possibilities.length === 1) {
     currentGuess = possibilities[0];
     showSolved();
+  } else if (possibilities.length === 0) {
+    statusDiv.textContent = `錯誤：已無可能組合 ${getRemainingText()}，請檢查之前的輸入`;
+    statusDiv.className = "error";
+    submitBtn.disabled = true;
   } else {
     updateGuess();
   }
