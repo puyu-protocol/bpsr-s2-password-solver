@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>4位數密碼破解助手（僅1或2）</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0ff;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #1a1a2e;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+    h1 {
+      text-align: center;
+      color: #a78bfa;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      margin-bottom: 24px;
+    }
+    #guess-display {
+      font-size: 3rem;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 12px;
+      background: #2d2d44;
+      padding: 16px;
+      border-radius: 8px;
+      margin: 20px 0;
+      min-height: 80px;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    label {
+      font-size: 1.1rem;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.2rem;
+      text-align: center;
+      border: 2px solid #4f46e5;
+      border-radius: 6px;
+      background: #1e1e38;
+      color: white;
+    }
+    button {
+      padding: 14px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #4f46e5;
+    }
+    button:disabled {
+      background: #4b5563;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .success { background: #10b981; color: white; }
+    .error   { background: #ef4444; color: white; }
+    .info    { background: #3b82f6; color: white; }
+    #history {
+      margin-top: 24px;
+      padding: 16px;
+      background: #111827;
+      border-radius: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .history-item {
+      margin: 8px 0;
+      padding: 8px;
+      background: #1f2937;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>4位數密碼破解助手</h1>
+  <p class="subtitle">密碼只由 1 和 2 組成<br>遊戲回饋：正確位置且正確數字的個數（0–4）</p>
+
+  <div id="guess-display">按「下一個建議」開始</div>
+
+  <div class="controls">
+    <label>輸入遊戲告訴你的正確數（0–4）：</label>
+    <input type="number" id="correct-input" min="0" max="4" value="" placeholder="0 到 4">
+
+    <button id="submit-btn">送出並取得下一個建議</button>
+    <button id="reset-btn">重新開始</button>
+  </div>
+
+  <div id="status" class="info">準備開始！</div>
+
+  <div id="history">
+    <strong>猜測歷史：</strong><br>
+    <!-- 歷史會動態加入 -->
+  </div>
+</div>
+
+<script>
+// 所有可能的組合（2^4 = 16 種）
+let possibilities = [
+  "1111","1112","1121","1122",
+  "1211","1212","1221","1222",
+  "2111","2112","2121","2122",
+  "2211","2212","2221","2222"
+];
+
+let currentGuess = null;
+let guessCount = 0;
+const historyDiv = document.getElementById("history");
+const statusDiv = document.getElementById("status");
+const guessDisplay = document.getElementById("guess-display");
+const input = document.getElementById("correct-input");
+const submitBtn = document.getElementById("submit-btn");
+const resetBtn = document.getElementById("reset-btn");
+
+function pickGuess() {
+  if (possibilities.length === 0) {
+    statusDiv.textContent = "錯誤：已無可能組合，請檢查輸入是否正確";
+    statusDiv.className = "error";
+    submitBtn.disabled = true;
+    return "????";
+  }
+  // 簡單策略：永遠拿第一個剩下的
+  return possibilities[0];
+}
+
+function countMatches(code, guess) {
+  let matches = 0;
+  for (let i = 0; i < 4; i++) {
+    if (code[i] === guess[i]) matches++;
+  }
+  return matches;
+}
+
+function updateGuess() {
+  currentGuess = pickGuess();
+  guessDisplay.textContent = currentGuess;
+  guessCount++;
+  statusDiv.textContent = `建議輸入：${currentGuess}  (${possibilities.length} 種可能剩下)`;
+  statusDiv.className = "info";
+  input.value = "";
+  input.focus();
+}
+
+function addToHistory(guess, correct) {
+  const item = document.createElement("div");
+  item.className = "history-item";
+  item.innerHTML = `第 ${guessCount} 猜：${guess} → 正確 ${correct} 個`;
+  historyDiv.appendChild(item);
+  historyDiv.scrollTop = historyDiv.scrollHeight;
+}
+
+function filterPossibilities(correct) {
+  const newPoss = [];
+  for (let code of possibilities) {
+    if (countMatches(code, currentGuess) === correct) {
+      newPoss.push(code);
+    }
+  }
+  possibilities = newPoss;
+}
+
+function showSolved() {
+  statusDiv.textContent = `破解成功！密碼就是 ${currentGuess} （共用了 ${guessCount} 次建議）`;
+  statusDiv.className = "success";
+  submitBtn.disabled = true;
+  guessDisplay.style.color = "#34d399";
+}
+
+// 初始化
+updateGuess();
+
+submitBtn.addEventListener("click", () => {
+  const val = parseInt(input.value);
+  if (isNaN(val) || val < 0 || val > 4) {
+    statusDiv.textContent = "請輸入 0 到 4 的數字";
+    statusDiv.className = "error";
+    return;
+  }
+
+  addToHistory(currentGuess, val);
+
+  if (val === 4) {
+    showSolved();
+    return;
+  }
+
+  filterPossibilities(val);
+
+  if (possibilities.length === 1) {
+    currentGuess = possibilities[0];
+    showSolved();
+  } else {
+    updateGuess();
+  }
+});
+
+resetBtn.addEventListener("click", () => {
+  possibilities = ["1111","1112","1121","1122","1211","1212","1221","1222","2111","2112","2121","2122","2211","2212","2221","2222"];
+  guessCount = 0;
+  historyDiv.innerHTML = "<strong>猜測歷史：</strong><br>";
+  submitBtn.disabled = false;
+  updateGuess();
+});
+</script>
+
+</body>
+</html>
