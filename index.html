@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>4位數密碼破解助手（僅1或2）</title>
+  <title>4桁パスワード解析アシスタント（1か2のみ）</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -120,10 +120,10 @@
 <body>
 
 <div class="container">
-  <h1>4位數密碼破解助手</h1>
-  <p class="subtitle">密碼只由 1 和 2 組成　遊戲回饋：正確位置且正確數字的個數（0–3）</p>
+  <h1>4桁パスワード解析アシスタント</h1>
+  <p class="subtitle">パスワードは 1 と 2 のみで構成　ゲームのフィードバック：正しい位置の正解数（0〜3）</p>
 
-  <div id="guess-display">按下方數字開始</div>
+  <div id="guess-display">下のボタンを押してください</div>
 
   <div class="controls">
     <button class="number-btn" data-value="0">0</button>
@@ -132,15 +132,15 @@
     <button class="number-btn" data-value="3">3</button>
   </div>
 
-  <button id="undo-btn" class="undo-btn" disabled>回到上一步</button>
+  <button id="undo-btn" class="undo-btn" disabled>一手戻す</button>
 
-  <div id="status" class="info">準備開始！（16 種可能）</div>
+  <div id="status" class="info">開始準備！（16 通りの可能性）</div>
 
   <div id="history">
-    <strong>猜測歷史：</strong><br>
+    <strong>推測履歴：</strong><br>
   </div>
 
-  <div class="reset-link" id="reset-link">重新開始</div>
+  <div class="reset-link" id="reset-link">最初からやり直す</div>
 </div>
 
 <script>
@@ -163,7 +163,7 @@ const undoBtn       = document.getElementById("undo-btn");
 const numberButtons = document.querySelectorAll(".number-btn");
 
 function getRemainingText() {
-  return `（${possibilities.length} 種可能剩下）`;
+  return `（残り ${possibilities.length} 通り）`;
 }
 
 function pickGuess() {
@@ -192,14 +192,14 @@ function updateGuess() {
   currentGuess = pickGuess();
   guessDisplay.textContent = currentGuess;
   guessCount++;
-  statusDiv.textContent = `建議輸入：${currentGuess}  ${getRemainingText()}`;
+  statusDiv.textContent = `推奨入力：${currentGuess}  ${getRemainingText()}`;
   statusDiv.className = "info";
 }
 
 function addToHistory(guess, correct) {
   const item = document.createElement("div");
   item.className = "history-item";
-  item.innerHTML = `第 ${guessCount} 猜：${guess} → 正確 ${correct} 個`;
+  item.innerHTML = `第 ${guessCount} 回目：${guess} → 正解 ${correct} 個`;
   historyDiv.appendChild(item);
   historyDiv.scrollTop = historyDiv.scrollHeight;
 }
@@ -210,7 +210,7 @@ function filterPossibilities(correct) {
 
 function showSolved() {
   guessDisplay.textContent = currentGuess;
-  statusDiv.textContent = `破解成功！密碼就是 ${currentGuess}  ${getRemainingText()} （共 ${guessCount} 次）`;
+  statusDiv.textContent = `解読成功！パスワードは ${currentGuess}  ${getRemainingText()} （全 ${guessCount} 回）`;
   statusDiv.className = "success";
   guessDisplay.style.color = "#34d399";
 }
@@ -224,7 +224,7 @@ function handleCorrect(correct) {
     currentGuess = possibilities[0];
     showSolved();
   } else if (possibilities.length === 0) {
-    statusDiv.textContent = `錯誤：已無可能組合 ${getRemainingText()}，請檢查輸入`;
+    statusDiv.textContent = `エラー：可能な組み合わせがありません ${getRemainingText()}。入力を確認してください`;
     statusDiv.className = "error";
   } else {
     updateGuess();
@@ -244,7 +244,7 @@ function undoLastStep() {
 
   guessDisplay.textContent = currentGuess;
   guessDisplay.style.color = "";
-  statusDiv.textContent = `已撤銷 → 回到：${currentGuess}  ${getRemainingText()}`;
+  statusDiv.textContent = `元に戻しました → 現在：${currentGuess}  ${getRemainingText()}`;
   statusDiv.className = "info";
 
   if (historyStack.length === 0) {
@@ -272,7 +272,7 @@ resetLink.addEventListener("click", () => {
   currentGuess = null;
   guessCount = 0;
   historyStack = [];
-  historyDiv.innerHTML = "<strong>猜測歷史：</strong><br>";
+  historyDiv.innerHTML = "<strong>推測履歴：</strong><br>";
   guessDisplay.style.color = "";
   undoBtn.disabled = true;
   updateGuess();
